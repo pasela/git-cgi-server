@@ -15,7 +15,13 @@ const (
 )
 
 func main() {
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	server := &GitCGIServer{
+		ProjectRoot:     cwd,
 		Addr:            SERVER_ADDR,
 		ShutdownTimeout: SHUTDOWN_TIMEOUT,
 	}

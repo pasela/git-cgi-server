@@ -5,11 +5,12 @@ import (
 	"log"
 	"net/http"
 	"net/http/cgi"
-	"path/filepath"
 	"time"
 )
 
 type GitCGIServer struct {
+	ProjectRoot     string
+	ExportAll       bool
 	Addr            string
 	ShutdownTimeout time.Duration
 	MustClose       bool
@@ -57,16 +58,21 @@ func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: be configurable
 	env := []string{
-		"GIT_PROJECT_ROOT=/path/to/repos",
-		"GIT_HTTP_EXPORT_ALL=",
+		"GIT_PROJECT_ROOT=" + s.ProjectRoot,
+	}
+	if s.ExportAll {
+		env = append(env, "GIT_HTTP_EXPORT_ALL=")
+	}
+
+	inheritEnv := []string{
+		"REMOTE_USER",
 	}
 
 	handler := &cgi.Handler{
-		Path: cgiBin,
-		Root: filepath.Base(cgiBin),
-		Env:  env,
+		Path:       cgiBin,
+		Env:        env,
+		InheritEnv: inheritEnv,
 	}
 	handler.ServeHTTP(w, r)
 }
