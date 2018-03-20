@@ -55,7 +55,6 @@ func (s *GitCGIServer) Shutdown() error {
 }
 
 func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.URL)
 	cgiBin, err := findBackendCGI()
 	if err != nil {
 		log.Println(err)
