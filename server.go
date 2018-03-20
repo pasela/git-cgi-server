@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"log"
 	"net/http"
@@ -54,6 +55,7 @@ func (s *GitCGIServer) Shutdown() error {
 }
 
 func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.URL)
 	cgiBin, err := findBackendCGI()
 	if err != nil {
 		log.Println(err)
@@ -72,10 +74,16 @@ func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request) {
 		"REMOTE_USER",
 	}
 
+	var stdErr bytes.Buffer
 	handler := &cgi.Handler{
 		Path:       cgiBin,
 		Env:        env,
 		InheritEnv: inheritEnv,
+		Stderr:     &stdErr,
 	}
 	handler.ServeHTTP(w, r)
+
+	if stdErr.Len() > 0 {
+		log.Println("[backend]", stdErr.String())
+	}
 }
