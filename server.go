@@ -11,6 +11,7 @@ import (
 type GitCGIServer struct {
 	ProjectRoot     string
 	ExportAll       bool
+	URLPrefix       string
 	Addr            string
 	ShutdownTimeout time.Duration
 	MustClose       bool
@@ -18,8 +19,11 @@ type GitCGIServer struct {
 }
 
 func (s *GitCGIServer) Serve() error {
+	if s.URLPrefix == "" {
+		s.URLPrefix = "/"
+	}
 	mux := http.NewServeMux()
-	mux.HandleFunc("/git", s.gitBackend)
+	mux.HandleFunc(s.URLPrefix, s.gitBackend)
 
 	s.httpServer = &http.Server{
 		Addr:    s.Addr,

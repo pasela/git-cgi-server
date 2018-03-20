@@ -17,6 +17,7 @@ const (
 type Args struct {
 	ProjectRoot string
 	ExportAll   bool
+	URLPrefix   string
 	Addr        string
 }
 
@@ -24,6 +25,7 @@ func parseArgs() (*Args, error) {
 	var args Args
 
 	flag.BoolVar(&args.ExportAll, "export-all", false, "export all repositories")
+	flag.StringVar(&args.URLPrefix, "url-prefix", "/", "URL prefix")
 	flag.StringVar(&args.Addr, "addr", defaultAddr, "server address")
 	flag.Parse()
 
@@ -45,6 +47,7 @@ func main() {
 	server := &GitCGIServer{
 		ProjectRoot:     args.ProjectRoot,
 		ExportAll:       args.ExportAll,
+		URLPrefix:       args.URLPrefix,
 		Addr:            args.Addr,
 		ShutdownTimeout: shutdownTimeout,
 	}
