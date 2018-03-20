@@ -19,7 +19,6 @@ type GitCGIServer struct {
 
 func (s *GitCGIServer) Serve() error {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/hello", s.hello)
 	mux.HandleFunc("/git", s.gitBackend)
 
 	s.httpServer = &http.Server{
@@ -75,10 +74,4 @@ func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request) {
 		InheritEnv: inheritEnv,
 	}
 	handler.ServeHTTP(w, r)
-}
-
-func (s *GitCGIServer) hello(w http.ResponseWriter, r *http.Request) {
-	log.Println("hello called")
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("hello\n"))
 }
