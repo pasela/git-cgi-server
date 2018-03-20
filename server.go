@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+const (
+	DefaultAddr = ":8080"
+)
+
 type GitCGIServer struct {
 	ProjectRoot     string
 	ExportAll       bool
@@ -21,6 +25,10 @@ func (s *GitCGIServer) Serve() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hello", s.hello)
 	mux.HandleFunc("/git", s.gitBackend)
+
+	if s.Addr == "" {
+		s.Addr = DefaultAddr
+	}
 
 	s.httpServer = &http.Server{
 		Addr:    s.Addr,

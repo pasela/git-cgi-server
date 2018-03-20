@@ -8,10 +8,8 @@ import (
 	"time"
 )
 
-// TOOD: be configurable
 const (
-	SERVER_ADDR      = ":8080"
-	SHUTDOWN_TIMEOUT = time.Second * 5
+	shutdownTimeout = time.Second * 5
 )
 
 func main() {
@@ -22,8 +20,7 @@ func main() {
 
 	server := &GitCGIServer{
 		ProjectRoot:     cwd,
-		Addr:            SERVER_ADDR,
-		ShutdownTimeout: SHUTDOWN_TIMEOUT,
+		ShutdownTimeout: shutdownTimeout,
 	}
 
 	errCh := make(chan error)
