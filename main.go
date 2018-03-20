@@ -13,13 +13,13 @@ const (
 )
 
 func main() {
-	cwd, err := os.Getwd()
+	projectRoot, err := getProjectRoot()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	server := &GitCGIServer{
-		ProjectRoot:     cwd,
+		ProjectRoot:     projectRoot,
 		ShutdownTimeout: shutdownTimeout,
 	}
 
@@ -37,7 +37,7 @@ func main() {
 	select {
 	case err, ok := <-errCh:
 		if ok {
-			log.Println("Http server error:", err)
+			log.Println("HTTP server error:", err)
 		}
 
 	case sig := <-sigCh:
@@ -47,4 +47,16 @@ func main() {
 		}
 		log.Println("HTTP server shutdown")
 	}
+}
+
+func getProjectRoot() (string, error) {
+	if len(os.Args) > 1 && os.Args[1] != "" {
+		return os.Args[1], nil
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", nil
+	}
+	return cwd, nil
 }
