@@ -17,6 +17,7 @@ const (
 type Args struct {
 	ProjectRoot string
 	ExportAll   bool
+	BackendCGI  string
 	URLPrefix   string
 	Addr        string
 }
@@ -25,6 +26,7 @@ func parseArgs() (*Args, error) {
 	var args Args
 
 	flag.BoolVar(&args.ExportAll, "export-all", false, "export all repositories")
+	flag.StringVar(&args.BackendCGI, "backend-cgi", "", "path to the CGI (git-http-backend)")
 	flag.StringVar(&args.URLPrefix, "url-prefix", "/", "URL prefix")
 	flag.StringVar(&args.Addr, "addr", defaultAddr, "server address")
 	flag.Parse()
@@ -47,6 +49,7 @@ func main() {
 	server := &GitCGIServer{
 		ProjectRoot:     args.ProjectRoot,
 		ExportAll:       args.ExportAll,
+		BackendCGI:      args.BackendCGI,
 		URLPrefix:       args.URLPrefix,
 		Addr:            args.Addr,
 		ShutdownTimeout: shutdownTimeout,

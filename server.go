@@ -12,6 +12,7 @@ import (
 type GitCGIServer struct {
 	ProjectRoot     string
 	ExportAll       bool
+	BackendCGI      string
 	URLPrefix       string
 	Addr            string
 	ShutdownTimeout time.Duration
@@ -20,6 +21,14 @@ type GitCGIServer struct {
 }
 
 func (s *GitCGIServer) Serve() error {
+	if s.BackendCGI == "" {
+		cgiBin, err := findBackendCGI()
+		if err != nil {
+			return err
+		}
+		s.BackendCGI = cgiBin
+	}
+
 	if s.URLPrefix == "" {
 		s.URLPrefix = "/"
 	}
@@ -55,13 +64,6 @@ func (s *GitCGIServer) Shutdown() error {
 }
 
 func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request) {
-	cgiBin, err := findBackendCGI()
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
 	env := []string{
 		"GIT_PROJECT_ROOT=" + s.ProjectRoot,
 	}
@@ -75,7 +77,7 @@ func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request) {
 
 	var stdErr bytes.Buffer
 	handler := &cgi.Handler{
-		Path:       cgiBin,
+		Path:       s.BackendCGI,
 		Env:        env,
 		InheritEnv: inheritEnv,
 		Stderr:     &stdErr,
