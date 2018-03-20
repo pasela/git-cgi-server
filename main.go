@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -24,6 +25,11 @@ type Args struct {
 
 func parseArgs() (*Args, error) {
 	var args Args
+
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [REPOS_DIR]\n", os.Args[0])
+		flag.PrintDefaults()
+	}
 
 	flag.BoolVar(&args.ExportAll, "export-all", false, "export all repositories")
 	flag.StringVar(&args.BackendCGI, "backend-cgi", "", "path to the CGI (git-http-backend)")
