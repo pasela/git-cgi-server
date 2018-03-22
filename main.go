@@ -16,11 +16,14 @@ const (
 )
 
 type Args struct {
-	ProjectRoot string
-	ExportAll   bool
-	BackendCGI  string
-	URLPrefix   string
-	Addr        string
+	ProjectRoot    string
+	ExportAll      bool
+	BackendCGI     string
+	BasicAuthFile  string
+	DigestAuthFile string
+	AuthRealm      string
+	URLPrefix      string
+	Addr           string
 }
 
 func parseArgs() (*Args, error) {
@@ -33,6 +36,9 @@ func parseArgs() (*Args, error) {
 
 	flag.BoolVar(&args.ExportAll, "export-all", false, "export all repositories")
 	flag.StringVar(&args.BackendCGI, "backend-cgi", "", "path to the CGI (git-http-backend)")
+	flag.StringVar(&args.BasicAuthFile, "basic-auth-file", "", "path to the basic auth file (htpasswd)")
+	flag.StringVar(&args.DigestAuthFile, "digest-auth-file", "", "path to the digest auth file (htdigest)")
+	flag.StringVar(&args.AuthRealm, "auth-realm", "Git", "realm name for the auth")
 	flag.StringVar(&args.URLPrefix, "url-prefix", "/", "URL prefix")
 	flag.StringVar(&args.Addr, "addr", defaultAddr, "server address")
 	flag.Parse()
@@ -56,6 +62,9 @@ func main() {
 		ProjectRoot:     args.ProjectRoot,
 		ExportAll:       args.ExportAll,
 		BackendCGI:      args.BackendCGI,
+		BasicAuthFile:   args.BasicAuthFile,
+		DigestAuthFile:  args.DigestAuthFile,
+		AuthRealm:       args.AuthRealm,
 		URLPrefix:       args.URLPrefix,
 		Addr:            args.Addr,
 		ShutdownTimeout: shutdownTimeout,
