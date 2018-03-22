@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/cgi"
 	"time"
+
+	auth "github.com/abbot/go-http-auth"
 )
 
 type GitCGIServer struct {
@@ -14,6 +16,9 @@ type GitCGIServer struct {
 	ExportAll       bool
 	BackendCGI      string
 	URLPrefix       string
+	BasicAuthFile   string
+	DigestAuthFile  string
+	AuthRealm       string
 	Addr            string
 	ShutdownTimeout time.Duration
 	MustClose       bool
@@ -33,7 +38,7 @@ func (s *GitCGIServer) Serve() error {
 		s.URLPrefix = "/"
 	}
 	mux := http.NewServeMux()
-	mux.HandleFunc(s.URLPrefix, s.gitBackend)
+	mux.HandleFunc(s.URLPrefix, s.getHandler())
 
 	s.httpServer = &http.Server{
 		Addr:    s.Addr,
@@ -63,7 +68,34 @@ func (s *GitCGIServer) Shutdown() error {
 	return nil
 }
 
-func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request) {
+func (s *GitCGIServer) getHandler() http.HandlerFunc {
+	authenticator := s.getAuthenticator()
+	if authenticator != nil {
+		return authenticator.Wrap(s.gitAuthHandler)
+	}
+	return s.gitNoAuthHandler
+}
+
+func (s *GitCGIServer) getAuthenticator() auth.AuthenticatorInterface {
+	if s.DigestAuthFile != "" {
+		secrets := auth.HtdigestFileProvider(s.DigestAuthFile)
+		return auth.NewDigestAuthenticator(s.AuthRealm, secrets)
+	} else if s.BasicAuthFile != "" {
+		secrets := auth.HtpasswdFileProvider(s.BasicAuthFile)
+		return auth.NewBasicAuthenticator(s.AuthRealm, secrets)
+	}
+	return nil
+}
+
+func (s *GitCGIServer) gitAuthHandler(w http.ResponseWriter, ar *auth.AuthenticatedRequest) {
+	s.gitBackend(w, &ar.Request, ar.Username)
+}
+
+func (s *GitCGIServer) gitNoAuthHandler(w http.ResponseWriter, r *http.Request) {
+	s.gitBackend(w, r, "")
+}
+
+func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request, username string) {
 	env := []string{
 		"GIT_PROJECT_ROOT=" + s.ProjectRoot,
 	}
@@ -71,16 +103,15 @@ func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request) {
 		env = append(env, "GIT_HTTP_EXPORT_ALL=")
 	}
 
-	inheritEnv := []string{
-		"REMOTE_USER",
+	if username != "" {
+		env = append(env, "REMOTE_USER="+username)
 	}
 
 	var stdErr bytes.Buffer
 	handler := &cgi.Handler{
-		Path:       s.BackendCGI,
-		Env:        env,
-		InheritEnv: inheritEnv,
-		Stderr:     &stdErr,
+		Path:   s.BackendCGI,
+		Env:    env,
+		Stderr: &stdErr,
 	}
 	handler.ServeHTTP(w, r)
 
