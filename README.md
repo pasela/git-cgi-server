@@ -1,6 +1,10 @@
 # git-cgi-server
 
-Simple Git CGI Server (using git-http-backend) written in Go.
+Simple Git Smart HTTP Server (using git-http-backend) written in Go.
+
+## What is Git Smart HTTP?
+
+See: https://git-scm.com/book/en/v2/Git-on-the-Server-Smart-HTTP
 
 ## Features
 
