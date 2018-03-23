@@ -24,6 +24,8 @@ type Args struct {
 	AuthRealm      string
 	URLPrefix      string
 	Addr           string
+	CertFile       string
+	KeyFile        string
 }
 
 func parseArgs() (*Args, error) {
@@ -41,7 +43,14 @@ func parseArgs() (*Args, error) {
 	flag.StringVar(&args.AuthRealm, "auth-realm", "Git", "realm name for the auth")
 	flag.StringVar(&args.URLPrefix, "url-prefix", "/", "URL prefix")
 	flag.StringVar(&args.Addr, "addr", defaultAddr, "server address")
+	flag.StringVar(&args.CertFile, "cert-file", "", "TLS Certificate")
+	flag.StringVar(&args.KeyFile, "key-file", "", "TLS Certificate Key")
 	flag.Parse()
+
+	if args.CertFile != "" && args.KeyFile == "" {
+		fmt.Println("-key-file is required when -cert-file specified")
+		os.Exit(1)
+	}
 
 	projectRoot, err := getProjectRoot(flag.Args())
 	if err != nil {
@@ -67,6 +76,8 @@ func main() {
 		AuthRealm:       args.AuthRealm,
 		URLPrefix:       args.URLPrefix,
 		Addr:            args.Addr,
+		CertFile:        args.CertFile,
+		KeyFile:         args.KeyFile,
 		ShutdownTimeout: shutdownTimeout,
 	}
 
