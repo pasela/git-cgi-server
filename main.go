@@ -47,6 +47,11 @@ func parseArgs() (*Args, error) {
 	flag.StringVar(&args.KeyFile, "key-file", "", "TLS Certificate Key")
 	flag.Parse()
 
+	if args.CertFile != "" && args.KeyFile == "" {
+		fmt.Println("-key-file is required when -cert-file specified")
+		os.Exit(1)
+	}
+
 	projectRoot, err := getProjectRoot(flag.Args())
 	if err != nil {
 		return nil, err
