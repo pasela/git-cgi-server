@@ -20,6 +20,8 @@ type GitCGIServer struct {
 	DigestAuthFile  string
 	AuthRealm       string
 	Addr            string
+	CertFile        string
+	KeyFile         string
 	ShutdownTimeout time.Duration
 	MustClose       bool
 	httpServer      *http.Server
