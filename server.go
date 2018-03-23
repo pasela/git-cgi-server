@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"log"
 	"net/http"
 	"net/http/cgi"
@@ -42,12 +43,53 @@ func (s *GitCGIServer) Serve() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc(s.URLPrefix, s.getHandler())
 
+	if s.CertFile != "" {
+		return s.serveTLS(mux)
+	}
+	return s.serve(mux)
+}
+
+func (s *GitCGIServer) serve(mux *http.ServeMux) error {
 	s.httpServer = &http.Server{
 		Addr:    s.Addr,
 		Handler: mux,
 	}
 
 	if err := s.httpServer.ListenAndServe(); err != nil {
+		if err != http.ErrServerClosed {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *GitCGIServer) serveTLS(mux *http.ServeMux) error {
+	// See: https://github.com/denji/golang-tls
+	cfg := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+		CurvePreferences: []tls.CurveID{
+			tls.CurveP521,
+			tls.CurveP384,
+			tls.CurveP256,
+		},
+		PreferServerCipherSuites: true,
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		},
+	}
+
+	s.httpServer = &http.Server{
+		Addr:      s.Addr,
+		Handler:   mux,
+		TLSConfig: cfg,
+	}
+
+	if err := s.httpServer.ListenAndServeTLS(s.CertFile, s.KeyFile); err != nil {
 		if err != http.ErrServerClosed {
 			return err
 		}
