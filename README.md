@@ -10,6 +10,7 @@ Simple Git CGI Server (using git-http-backend) written in Go
 
 * Simple and lightweight
 * Support HTTP authentication (Basic and Digest)
+* Support TLS
 
 ## Install
 
@@ -31,6 +32,11 @@ git-cgi-server --export-all /path/to/repos
 Enable Basic authentication:
 ```sh
 git-cgi-server --basic-auth-file=/path/to/.htpasswd --auth-realm=MyGitRepos /path/to/repos
+```
+
+Use TLS:
+```sh
+git-cgi-server --cert-file=/path/to/server.crt --key-file=/path/to/server.key /path/to/repos
 ```
 
 See `git-cgi-server -h` for more options.
