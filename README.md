@@ -1,12 +1,19 @@
 # git-cgi-server
 
-Simple Git CGI Server (using git-http-backend) written in Go
+Simple Git CGI Server (using git-http-backend) written in Go.
 
 ## Features
 
 * Simple and lightweight
 * Support HTTP authentication (Basic and Digest)
 * Support TLS
+
+## Motivation
+
+* I don't want to open SSH only for Git access.
+* I don't want to use rich HTTP servers (such as Apache, nginx, etc.) only for Git.
+* I don't want to change owner of repositories to the httpd user (such as httpd, www-data, etc.)
+* I want to launch easily without any complex installation and configuration.
 
 ## Requirement
 
