@@ -2,15 +2,15 @@
 
 Simple Git CGI Server (using git-http-backend) written in Go
 
-## Requires
-
-* Git (including git-http-backend)
-
 ## Features
 
 * Simple and lightweight
 * Support HTTP authentication (Basic and Digest)
 * Support TLS
+
+## Requirement
+
+* Git (including git-http-backend)
 
 ## Install
 
