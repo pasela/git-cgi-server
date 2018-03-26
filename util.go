@@ -43,7 +43,7 @@ func removePIDFile(file string) error {
 }
 
 func subtreePath(uri string) string {
-	if uri == "" {
+	if uri == "" || uri == "/" {
 		return "/"
 	}
 
