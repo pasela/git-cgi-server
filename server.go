@@ -17,7 +17,7 @@ type GitCGIServer struct {
 	ProjectRoot     string
 	ExportAll       bool
 	BackendCGI      string
-	URLPrefix       string
+	URIPrefix       string
 	BasicAuthFile   string
 	DigestAuthFile  string
 	AuthRealm       string
@@ -38,9 +38,9 @@ func (s *GitCGIServer) Serve() error {
 		s.BackendCGI = cgiBin
 	}
 
-	s.URLPrefix = subtreePath(s.URLPrefix)
+	s.URIPrefix = subtreePath(s.URIPrefix)
 	mux := http.NewServeMux()
-	mux.HandleFunc(s.URLPrefix, s.getHandler())
+	mux.HandleFunc(s.URIPrefix, s.getHandler())
 
 	if s.CertFile != "" {
 		return s.serveTLS(mux)
@@ -153,7 +153,7 @@ func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request, userna
 	var stdErr bytes.Buffer
 	handler := &cgi.Handler{
 		Path:   s.BackendCGI,
-		Root:   path.Clean(s.URLPrefix),
+		Root:   path.Clean(s.URIPrefix),
 		Env:    env,
 		Stderr: &stdErr,
 	}
