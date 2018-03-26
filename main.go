@@ -11,6 +11,8 @@ import (
 )
 
 const (
+	ApplicationName = "git-cgi-server"
+
 	defaultAddr     = ":8080"
 	shutdownTimeout = time.Second * 5
 )
@@ -33,7 +35,8 @@ func parseArgs() (*Args, error) {
 	var args Args
 
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [REPOS_DIR]\n", os.Args[0])
+		fmt.Fprintf(flag.CommandLine.Output(),
+			"%s v%s\n\nUsage: %s [REPOS_DIR]\n", ApplicationName, Version, os.Args[0])
 		flag.PrintDefaults()
 	}
 
