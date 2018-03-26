@@ -26,6 +26,7 @@ type Args struct {
 	Addr           string
 	CertFile       string
 	KeyFile        string
+	PID            string
 }
 
 func parseArgs() (*Args, error) {
@@ -45,6 +46,7 @@ func parseArgs() (*Args, error) {
 	flag.StringVar(&args.Addr, "addr", defaultAddr, "server address")
 	flag.StringVar(&args.CertFile, "cert-file", "", "TLS Certificate")
 	flag.StringVar(&args.KeyFile, "key-file", "", "TLS Certificate Key")
+	flag.StringVar(&args.PID, "pid", "", "PID file")
 	flag.Parse()
 
 	if args.CertFile != "" && args.KeyFile == "" {
@@ -89,6 +91,11 @@ func main() {
 		close(errCh)
 	}()
 	log.Printf("Starting HTTP server on %s (PID=%d)\n", args.Addr, os.Getpid())
+	if args.PID != "" {
+		if err := writePIDFile(args.PID); err != nil {
+			log.Fatalln(err)
+		}
+	}
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
@@ -104,6 +111,10 @@ func main() {
 			log.Println("Failed to shutdown HTTP server:", err)
 		}
 		log.Println("HTTP server shutdown")
+	}
+
+	if args.PID != "" {
+		removePIDFile(args.PID)
 	}
 }
 
