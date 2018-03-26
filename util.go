@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strconv"
 )
@@ -39,4 +40,13 @@ func removePIDFile(file string) error {
 		return err
 	}
 	return nil
+}
+
+func subtreePath(uri string) string {
+	if uri == "" {
+		return "/"
+	}
+
+	// ensure the trailing slash
+	return path.Clean(uri) + "/"
 }

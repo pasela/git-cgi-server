@@ -38,9 +38,7 @@ func (s *GitCGIServer) Serve() error {
 		s.BackendCGI = cgiBin
 	}
 
-	if s.URLPrefix == "" {
-		s.URLPrefix = "/"
-	}
+	s.URLPrefix = subtreePath(s.URLPrefix)
 	mux := http.NewServeMux()
 	mux.HandleFunc(s.URLPrefix, s.getHandler())
 
