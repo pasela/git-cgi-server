@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/cgi"
+	"path"
 	"time"
 
 	auth "github.com/abbot/go-http-auth"
@@ -154,6 +155,7 @@ func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request, userna
 	var stdErr bytes.Buffer
 	handler := &cgi.Handler{
 		Path:   s.BackendCGI,
+		Root:   path.Clean(s.URLPrefix),
 		Env:    env,
 		Stderr: &stdErr,
 	}
