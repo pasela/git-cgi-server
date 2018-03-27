@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/cgi"
 	"path"
+	"path/filepath"
 	"time"
 
 	auth "github.com/abbot/go-http-auth"
@@ -37,6 +38,12 @@ func (s *GitCGIServer) Serve() error {
 		}
 		s.BackendCGI = cgiBin
 	}
+
+	proot, err := filepath.Abs(s.ProjectRoot)
+	if err != nil {
+		return err
+	}
+	s.ProjectRoot = proot
 
 	s.URIPrefix = subtreePath(s.URIPrefix)
 	mux := http.NewServeMux()
