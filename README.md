@@ -8,6 +8,7 @@ See: https://git-scm.com/book/en/v2/Git-on-the-Server-Smart-HTTP
 
 ## Features
 
+* Cross-platform
 * Simple and lightweight
 * Support HTTP authentication (Basic and Digest)
 * Support TLS
@@ -51,6 +52,28 @@ git-cgi-server --cert-file=/path/to/server.crt --key-file=/path/to/server.key /p
 ```
 
 See `git-cgi-server -h` for more options.
+
+## Running git-cgi-server behind reverse proxy server
+
+You can also serve git-cgi-server with reverse proxy.
+
+Apache example: `/etc/httpd/conf.d/git.conf`
+
+```apache
+# Git Smart HTTP
+ProxyPass /git http://localhost:10789/git
+ProxyPassReverse /git http://localhost:10789/git
+```
+
+```sh
+git-cgi-server" \
+    --addr=:10789 \
+    --digest-auth-file=/path/to/.htdigest \
+    --auth-realm=Git \
+    --uri-prefix=/git/ \
+    --export-all \
+    /path/to/repos
+```
 
 ## License
 
