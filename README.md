@@ -24,7 +24,9 @@ See: https://git-scm.com/book/en/v2/Git-on-the-Server-Smart-HTTP
 
 * Git (including git-http-backend)
 
-## Install
+## Installation
+
+Use `go get` or just download [binary releases](https://github.com/pasela/git-cgi-server/releases).
 
 ```sh
 go get github.com/pasela/git-cgi-server
