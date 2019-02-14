@@ -104,8 +104,8 @@ func (s *GitCGIServer) serveTLS(mux *http.ServeMux) error {
 	return nil
 }
 
-func (s *GitCGIServer) Shutdown() error {
-	ctx, cancel := context.WithTimeout(context.Background(), s.ShutdownTimeout)
+func (s *GitCGIServer) Shutdown(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, s.ShutdownTimeout)
 	defer cancel()
 
 	if err := s.httpServer.Shutdown(ctx); err != nil {
