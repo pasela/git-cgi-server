@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -86,39 +88,32 @@ func main() {
 		ShutdownTimeout: shutdownTimeout,
 	}
 
-	errCh := make(chan error)
+	idleConnsClosed := make(chan struct{})
 	go func() {
-		if err := server.Serve(); err != nil {
-			errCh <- err
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+		log.Printf("Shutting down HTTP server by signal '%s' received\n", <-sigCh)
+
+		if err := server.Shutdown(context.Background()); err != nil {
+			log.Printf("HTTP server shutdown error: %v", err)
 		}
-		close(errCh)
+		close(idleConnsClosed)
 	}()
-	log.Printf("Starting HTTP server on %s (PID=%d)\n", args.Addr, os.Getpid())
+
 	if args.PID != "" {
 		if err := writePIDFile(args.PID); err != nil {
 			log.Fatalln(err)
 		}
+		defer removePIDFile(args.PID)
 	}
 
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
-	select {
-	case err, ok := <-errCh:
-		if ok {
-			log.Println("HTTP server error:", err)
-		}
-
-	case sig := <-sigCh:
-		log.Printf("Signal %s received\n", sig)
-		if err := server.Shutdown(); err != nil {
-			log.Println("Failed to shutdown HTTP server:", err)
-		}
-		log.Println("HTTP server shutdown")
+	log.Printf("Starting HTTP server on %s (PID=%d)\n", args.Addr, os.Getpid())
+	if err := server.Serve(); err != nil && err != http.ErrServerClosed {
+		log.Println("HTTP server error:", err)
 	}
 
-	if args.PID != "" {
-		removePIDFile(args.PID)
-	}
+	<-idleConnsClosed
+	log.Println("HTTP server stopped")
 }
 
 func getProjectRoot(args []string) (string, error) {
