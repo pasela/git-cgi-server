@@ -1,0 +1,7 @@
+# github.com/abbot/go-http-auth v0.4.0
+github.com/abbot/go-http-auth
+# golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d
+golang.org/x/crypto/bcrypt
+golang.org/x/crypto/blowfish
+# golang.org/x/net v0.0.0-20200202094626-16171245cfb2
+golang.org/x/net/context
