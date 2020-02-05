@@ -19,6 +19,11 @@ const (
 	shutdownTimeout = time.Second * 5
 )
 
+var (
+	// injected by build process
+	version = "unknown"
+)
+
 type Args struct {
 	ProjectRoot    string
 	ExportAll      bool
@@ -38,7 +43,7 @@ func parseArgs() (*Args, error) {
 
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(),
-			"%s v%s\n\nUsage: %s [REPOS_DIR]\n", ApplicationName, Version, os.Args[0])
+			"%s version %s\n\nUsage: %s [REPOS_DIR]\n", ApplicationName, version, os.Args[0])
 		flag.PrintDefaults()
 	}
 

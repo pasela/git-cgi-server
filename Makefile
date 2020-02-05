@@ -1,37 +1,60 @@
-PREFIX = /usr/local
-BINDIR = $(PREFIX)/bin
-DISTDIR = releases
-GO_FLAGS = -ldflags="-s -w"
-DEVTOOL_DIR = $(CURDIR)/devtool
-GOX = $(DEVTOOL_DIR)/bin/gox
-OSARCH = linux/amd64 linux/arm darwin/amd64 windows/386 windows/amd64
-DIST_FORMAT = $(DISTDIR)/{{.Dir}}-{{.OS}}-{{.Arch}}
+NAME := git-cgi-server
+PREFIX := /usr/local
+BINDIR := $(PREFIX)/bin
 
-.PHONY: all test build install clean dist dist-clean
+VERSION := $(shell git describe --tags --always --dirty=-dev)
+LDFLAGS := -s -w -X 'main.version=$(VERSION)'
 
-all: build
+DEVTOOLS_DIR := $(CURDIR)/devtools
+DEVTOOLS_BIN := $(DEVTOOLS_DIR)/bin
 
-build: git-cgi-server
+DISTDIR := releases
+OSARCH := linux/amd64 linux/arm darwin/amd64 windows/386 windows/amd64
+DIST_FORMAT := $(DISTDIR)/{{.Dir}}-{{.OS}}-{{.Arch}}
 
-git-cgi-server: *.go
-	go build $(GO_FLAGS)
+SOURCES := $(shell find . -type f -name "*.go")
 
-test:
-	go test $(shell go list ./... | grep -v "/vendor/")
+export GO111MODULE=on
 
-install: all
+.PHONY: build
+build: $(NAME)
+
+$(NAME): $(SOURCES)
+	go build -ldflags "$(LDFLAGS)"
+
+.PHONY: install
+install: build
 	install -d $(BINDIR)
-	install git-cgi-server $(BINDIR)
+	install $(NAME) $(BINDIR)
 
+.PHONY: dist
+dist: devtools
+	$(DEVTOOLS_BIN)/gox -osarch="$(OSARCH)" -ldflags "$(LDFLAGS)" -output="$(DIST_FORMAT)"
+
+.PHONY: dist-clean
+dist-clean: clean
+	rm -rf "$(DISTDIR)" "$(DEVTOOLS_BIN)"
+
+.PHONY: clean
 clean:
-	rm -f git-cgi-server
+	go clean
 
-dist: $(DEVTOOL_DIR)/bin/gox
-	$(GOX) -osarch="$(OSARCH)" $(GO_FLAGS) -output="$(DIST_FORMAT)" .
+.PHONY: test
+test:
+	go test -v -race -cover ./...
 
-$(DEVTOOL_DIR)/bin/gox:
-	mkdir -p $(DEVTOOL_DIR)/{bin,pkg,src}
-	GOPATH=$(DEVTOOL_DIR) go get github.com/mitchellh/gox
+.PHONY: deps
+deps: download-deps devtools
 
-dist-clean:
-	rm -rf git-cgi-server $(DISTDIR) $(DEVTOOL_DIR)
+.PHONY: download-deps
+download-deps:
+	go get -v -d
+
+.PHONY: devtools
+devtools:
+	go generate $(DEVTOOLS_DIR)/devtools.go
+
+.PHONY: lint
+lint:
+	go vet ./...
+	golint -set_exit_status ./...
