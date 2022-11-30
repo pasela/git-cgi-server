@@ -22,6 +22,7 @@ type GitCGIServer struct {
 	BasicAuthFile   string
 	DigestAuthFile  string
 	AuthRealm       string
+	GoModules       bool
 	Addr            string
 	CertFile        string
 	KeyFile         string

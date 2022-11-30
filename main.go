@@ -31,6 +31,7 @@ type Args struct {
 	BasicAuthFile  string
 	DigestAuthFile string
 	AuthRealm      string
+	GoModules      bool
 	URIPrefix      string
 	Addr           string
 	CertFile       string
@@ -52,6 +53,7 @@ func parseArgs() (*Args, error) {
 	flag.StringVar(&args.BasicAuthFile, "basic-auth-file", "", "path to the basic auth file (htpasswd)")
 	flag.StringVar(&args.DigestAuthFile, "digest-auth-file", "", "path to the digest auth file (htdigest)")
 	flag.StringVar(&args.AuthRealm, "auth-realm", "Git", "realm name for the auth")
+	flag.BoolVar(&args.GoModules, "go-modules", false, "enable Go modules support")
 	flag.StringVar(&args.URIPrefix, "uri-prefix", "/", "URI prefix")
 	flag.StringVar(&args.Addr, "addr", defaultAddr, "server address")
 	flag.StringVar(&args.CertFile, "cert-file", "", "TLS Certificate")
@@ -86,6 +88,7 @@ func main() {
 		BasicAuthFile:   args.BasicAuthFile,
 		DigestAuthFile:  args.DigestAuthFile,
 		AuthRealm:       args.AuthRealm,
+		GoModules:       args.GoModules,
 		URIPrefix:       args.URIPrefix,
 		Addr:            args.Addr,
 		CertFile:        args.CertFile,
