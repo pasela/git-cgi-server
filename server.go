@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"html/template"
 	"log"
 	"net/http"
 	"net/http/cgi"
@@ -139,11 +140,23 @@ func (s *GitCGIServer) getAuthenticator() auth.AuthenticatorInterface {
 }
 
 func (s *GitCGIServer) gitAuthHandler(w http.ResponseWriter, ar *auth.AuthenticatedRequest) {
-	s.gitBackend(w, &ar.Request, ar.Username)
+	s.handleRequest(w, &ar.Request, ar.Username)
 }
 
 func (s *GitCGIServer) gitNoAuthHandler(w http.ResponseWriter, r *http.Request) {
-	s.gitBackend(w, r, "")
+	s.handleRequest(w, r, "")
+}
+
+func (s *GitCGIServer) handleRequest(w http.ResponseWriter, r *http.Request, username string) {
+	if s.GoModules && isGoGetRequest(r) {
+		s.handleGoGetRequest(w, r)
+	} else {
+		s.gitBackend(w, r, username)
+	}
+}
+
+func isGoGetRequest(r *http.Request) bool {
+	return r.URL.Query().Has("go-get")
 }
 
 func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request, username string) {
@@ -169,5 +182,91 @@ func (s *GitCGIServer) gitBackend(w http.ResponseWriter, r *http.Request, userna
 
 	if stdErr.Len() > 0 {
 		log.Println("[backend]", stdErr.String())
+	}
+}
+
+const goModulesTemplate = `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+   	<title>{{.ModulePath}}</title>
+    <meta name="go-import" content="{{.ModulePath}} {{.Vcs}} {{.RepoURL}}">
+  </head>
+  <body>
+   	<p><code>go get {{.ModulePath}}</code></p>
+  </body>
+</html>
+`
+
+type goModuleInfo struct {
+	Vcs        string
+	ModulePath string
+	RepoURL    string
+}
+
+type gitRepoInfo struct {
+	RequestPath string // Request path (e.g. "/URI-PREFIX/foo")
+	RequestDir  string // Request directory (e.g. "/PROJECT-ROOT/foo")
+	GitPath     string // Git repository path (e.g. "/URI-PREFIX/foo.git")
+	GitDir      string // Git repository directory (e.g. "/PROJECT-ROOT/foo.git")
+	Exists      bool
+}
+
+func (s *GitCGIServer) handleGoGetRequest(w http.ResponseWriter, r *http.Request) {
+	if !isGoGetRequest(r) {
+		w.WriteHeader(404)
+		return
+	}
+
+	repo := s.getGitRepoInfo(r.URL.Path)
+	if !repo.Exists {
+		w.WriteHeader(404)
+		return
+	}
+
+	modulePath := r.Host + repo.RequestPath
+	port := toURLPort(s.Addr)
+	var repoURL string
+	if r.TLS != nil {
+		repoURL = "https://" + r.Host + port + repo.GitPath
+	} else {
+		repoURL = "http://" + r.Host + port + repo.GitPath
+	}
+	data := goModuleInfo{
+		Vcs:        "git",
+		ModulePath: modulePath,
+		RepoURL:    repoURL,
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(200)
+
+	t := template.Must(template.New("go-modules").Parse(goModulesTemplate))
+	err := t.Execute(w, data)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (s *GitCGIServer) getGitRepoInfo(requestPath string) gitRepoInfo {
+	requestRepo := stripPrefix(requestPath, s.URIPrefix)
+	requestDir := filepath.Join(s.ProjectRoot, requestRepo)
+
+	gitPath := requestPath + ".git"
+	gitDir := requestDir + ".git"
+	hasRequestDir := isDir(requestDir)
+	hasGitDir := isDir(gitDir)
+
+	if !hasGitDir && hasRequestDir {
+		gitPath = requestPath
+		gitDir = requestDir
+	}
+
+	return gitRepoInfo{
+		RequestPath: requestPath,
+		RequestDir:  requestDir,
+		GitPath:     gitPath,
+		GitDir:      gitDir,
+		Exists:      hasGitDir || hasRequestDir,
 	}
 }

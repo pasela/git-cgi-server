@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 func findGitPath() (string, error) {
@@ -49,4 +50,31 @@ func subtreePath(uri string) string {
 
 	// ensure the trailing slash
 	return path.Clean(uri) + "/"
+}
+
+func stripPrefix(path, prefix string) string {
+	if prefix == "" || prefix == "/" {
+		return path
+	} else {
+		return strings.TrimPrefix(path, prefix)
+	}
+}
+
+func isDir(file string) bool {
+	s, err := os.Stat(file)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
+
+func toURLPort(addr string) string {
+	s := strings.SplitN(addr, ":", 2)
+	port := s[1]
+
+	if port == "80" || port == "443" {
+		return ""
+	} else {
+		return ":" + port
+	}
 }
